@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using Topshelf.Extensions.Hosting;
 
 namespace GrandfatherClock
@@ -8,6 +9,10 @@ namespace GrandfatherClock
     {
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File(@"C:\Logs\grandfather-clock\log-.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
             var builder = CreateHostBuilder(args);
 
             builder.RunAsTopshelfService(hc =>

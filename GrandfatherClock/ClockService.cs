@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
@@ -14,6 +15,11 @@ namespace GrandfatherClock
             _timer.Elapsed += (sender, eventArgs) => Console.WriteLine("It is {0} and all is well", DateTime.Now);
         }
         public Task StartAsync(System.Threading.CancellationToken cancellationToken) { _timer.Start(); return Task.CompletedTask; }
-        public Task StopAsync(System.Threading.CancellationToken cancellationToken) { _timer.Stop(); return Task.CompletedTask; }
+        public Task StopAsync(System.Threading.CancellationToken cancellationToken) 
+        { 
+            _timer.Stop(); 
+            Log.CloseAndFlush(); 
+            return Task.CompletedTask; 
+        }
     }
 }
