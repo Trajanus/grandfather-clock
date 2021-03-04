@@ -28,8 +28,13 @@ namespace GrandfatherClock
             return Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<ClockService>();
+                    services.AddHostedService(ClockServiceFactory);
                 });
+        }
+
+        public static ClockService ClockServiceFactory(System.IServiceProvider provider)
+        {
+            return new ClockService(900000); // 900000 is the number of milliseconds in 15 minutes
         }
     }
 }
