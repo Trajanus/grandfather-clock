@@ -11,15 +11,16 @@ namespace GrandfatherClock
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File(@"C:\Logs\grandfather-clock\log-.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.Console()
                 .CreateLogger();
 
             var builder = CreateHostBuilder(args);
 
             builder.RunAsTopshelfService(hc =>
             {
-                hc.SetServiceName("GenericHostInTopshelf");
-                hc.SetDisplayName("Generic Host In Topshelf");
-                hc.SetDescription("Runs a generic host as a Topshelf service.");
+                hc.SetServiceName("GrandfatherClock");
+                hc.SetDisplayName("Grandfather Clock");
+                hc.SetDescription("Chimes every quarter hour.");
             });
         }
 
