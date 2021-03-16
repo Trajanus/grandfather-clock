@@ -20,7 +20,7 @@ namespace GrandfatherClock
             {
                 hc.SetServiceName("GrandfatherClock");
                 hc.SetDisplayName("Grandfather Clock");
-                hc.SetDescription("Chimes every quarter hour.");
+                hc.SetDescription("Chimes every hour.");
             });
         }
 
@@ -35,7 +35,7 @@ namespace GrandfatherClock
 
         public static ClockService ClockServiceFactory(System.IServiceProvider provider)
         {
-            return new ClockService(900000); // 900000 is the number of milliseconds in 15 minutes
+            return new ClockService(3600000); // 3600000 is the number of milliseconds in 1 hour
         }
     }
 }
