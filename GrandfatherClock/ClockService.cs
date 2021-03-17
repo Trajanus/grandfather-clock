@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Serilog;
@@ -15,7 +17,7 @@ namespace GrandfatherClock
         private const int MillisecondsInHour = 3600000;
         private const int MillisecondsInFiveMinutes = 300000;
 
-        private readonly string _chimeFolderPath;
+        private readonly GrandfatherClockOptions _options;
         private readonly int _millisecondsFactor;
         private readonly Timer _timer;
 
@@ -23,25 +25,26 @@ namespace GrandfatherClock
         private RawSourceWaveStream _chimeIntro;
         private RawSourceWaveStream _finalChime;
 
-        public ClockService(int chimeIntervalInMilliseconds)
+        public ClockService(int chimeIntervalInMilliseconds, GrandfatherClockOptions options)
         {
             _millisecondsFactor = chimeIntervalInMilliseconds;
+            _options = options;
             _timer = new Timer(GetMillisecondsToNextChime(_millisecondsFactor)) { AutoReset = true };
             Log.Information($"Next chime will be at {DateTime.Now.AddMilliseconds(_timer.Interval)}");
             _timer.Elapsed += Chime;
-            _chimeFolderPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\GrandfatherClock\chimes\";
         }
+
         public async Task StartAsync(System.Threading.CancellationToken cancellationToken) 
         {
-            if (!Directory.Exists(_chimeFolderPath))
+            if (!Directory.Exists(_options.ChimesDirectoryPath))
             {
-                Log.Warning($"Chime folder {_chimeFolderPath} does not exist, it will be created.");
-                Directory.CreateDirectory(_chimeFolderPath);
+                Log.Warning($"Chime folder {_options.ChimesDirectoryPath} does not exist, it will be created.");
+                Directory.CreateDirectory(_options.ChimesDirectoryPath);
             }
 
-            _chime = await LoadChime($"{_chimeFolderPath}chime.wav");
-            _chimeIntro = await LoadChime($"{_chimeFolderPath}chime-intro.wav");
-            _finalChime = await LoadChime($"{_chimeFolderPath}final-chime.wav");
+            _chime = await LoadChime($"{_options.ChimesDirectoryPath}chime.wav");
+            _chimeIntro = await LoadChime($"{_options.ChimesDirectoryPath}chime-intro.wav");
+            _finalChime = await LoadChime($"{_options.ChimesDirectoryPath}final-chime.wav");
 
             _timer.Start(); 
             return; 
@@ -74,7 +77,7 @@ namespace GrandfatherClock
             }
             catch (FileNotFoundException ex)
             {
-                Log.Error($"Failed to find chime file at {_chimeFolderPath}chime.wav", ex);
+                Log.Error($"Failed to find chime file at {_options.ChimesDirectoryPath}chime.wav", ex);
             }
 
             return chime;
@@ -131,6 +134,7 @@ namespace GrandfatherClock
 
                 using (var outputDevice = new WaveOutEvent())
                 {
+                    outputDevice.Volume = _options.Volume;
                     outputDevice.Init(provida);
                     outputDevice.Play();
                     while (outputDevice.PlaybackState == PlaybackState.Playing)
