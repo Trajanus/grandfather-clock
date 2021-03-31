@@ -132,19 +132,24 @@ namespace GrandfatherClock
                 providers.Add(finalChime.ToSampleProvider());
                 ConcatenatingSampleProvider provida = new ConcatenatingSampleProvider(providers);
 
-                using (var outputDevice = new WaveOutEvent())
-                {
-                    outputDevice.Volume = _options.Volume;
-                    outputDevice.Init(provida);
-                    outputDevice.Play();
-                    while (outputDevice.PlaybackState == PlaybackState.Playing)
-                    {
-                        Task.Delay(1000);
-                    }
-                }
+                var outputDevice = new WaveOutEvent();
+                outputDevice.Volume = _options.Volume;
+                outputDevice.Init(provida);
+                outputDevice.Play();
+                outputDevice.PlaybackStopped += OnPlaybackStopped;
+
                 chime.Position = 0;
                 chimeIntro.Position = 0;
                 finalChime.Position = 0;
+            }
+        }
+
+        private void OnPlaybackStopped(object sender, EventArgs e)
+        {
+            WaveOutEvent outputDevice = sender as WaveOutEvent;
+            if (null != outputDevice && outputDevice.PlaybackState == PlaybackState.Stopped)
+            {
+                outputDevice.Dispose();
             }
         }
 
