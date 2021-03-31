@@ -7,5 +7,6 @@ namespace GrandfatherClock
         public string ChimesDirectoryPath { get; set; }
         public string LogDirectoryPath { get; set; }
         public float Volume { get; set; }
+        public int ChimeInterval{get;set;}
     }
 }

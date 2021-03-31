@@ -25,9 +25,9 @@ namespace GrandfatherClock
         private RawSourceWaveStream _chimeIntro;
         private RawSourceWaveStream _finalChime;
 
-        public ClockService(int chimeIntervalInMilliseconds, GrandfatherClockOptions options)
+        public ClockService(GrandfatherClockOptions options)
         {
-            _millisecondsFactor = chimeIntervalInMilliseconds;
+            _millisecondsFactor = options.ChimeInterval;
             _options = options;
             _timer = new Timer(GetMillisecondsToNextChime(_millisecondsFactor)) { AutoReset = true };
             Log.Information($"Next chime will be at {DateTime.Now.AddMilliseconds(_timer.Interval)}");
@@ -152,9 +152,6 @@ namespace GrandfatherClock
         {
             if (millisecondsFactor > MillisecondsInHour)
                 millisecondsFactor = MillisecondsInHour;
-
-            if (millisecondsFactor < MillisecondsInFiveMinutes)
-                millisecondsFactor = MillisecondsInFiveMinutes;
 
             int elapsedMillisecondsInCurrentHour = (DateTime.Now.Minute * 60 * 1000) + (DateTime.Now.Second * 1000) + DateTime.Now.Millisecond;
             int factor = millisecondsFactor;

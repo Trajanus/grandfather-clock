@@ -40,7 +40,7 @@ namespace GrandfatherClock
 
         public static ClockService ClockServiceFactory(System.IServiceProvider provider)
         {
-            return new ClockService(3600000, options); // 3600000 is the number of milliseconds in 1 hour
+            return new ClockService(options);
         }
 
         public static GrandfatherClockOptions ReadConfiguration()
