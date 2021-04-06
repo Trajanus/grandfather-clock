@@ -48,7 +48,7 @@ namespace GrandfatherClock
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("appsettings.json");
             IConfiguration configuration = configurationBuilder.Build();
-            options = new GrandfatherClockOptions();
+            var options = new GrandfatherClockOptions();
             configuration.Bind(options);
             return options;
         }
