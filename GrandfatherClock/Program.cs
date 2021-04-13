@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Topshelf.Extensions.Hosting;
 
-namespace GrandfatherClock
+namespace FishmanIndustries
 {
     class Program
     {

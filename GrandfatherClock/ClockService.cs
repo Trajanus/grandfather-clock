@@ -10,7 +10,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace GrandfatherClock
+namespace FishmanIndustries
 {
     public class ClockService : IHostedService
     {
@@ -91,56 +91,13 @@ namespace GrandfatherClock
                 timer.Interval = GetMillisecondsToNextChime(_millisecondsFactor);
                 Log.Information($"Next chime will be at {DateTime.Now.AddMilliseconds(timer.Interval)}");
 
-                PlayChime(_chime, _chimeIntro, _finalChime);
+                GrandfatherClock clock = new GrandfatherClock(_options);
+                clock.PlayChime(_chime, _chimeIntro, _finalChime);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
                 throw;
-            }
-        }
-
-        private void PlayChime(RawSourceWaveStream chime, RawSourceWaveStream chimeIntro, RawSourceWaveStream finalChime)
-        {
-            if (null == chime
-                || null == chimeIntro
-                || null == finalChime)
-            {
-                Console.Beep();
-            }
-            else
-            {
-                int hour = DateTime.Now.Hour;
-                if (hour == 0)
-                    hour = 12;
-                if (hour > 12)
-                    hour = hour - 12;
-
-                List<ISampleProvider> providers = new List<ISampleProvider>();
-                providers.Add(chimeIntro.ToSampleProvider());
-
-                for (int i = 0; i < hour - 1; i++)
-                {
-                    MemoryStream stream = new MemoryStream();
-                    chime.CopyTo(stream);
-                    RawSourceWaveStream waveStream = new RawSourceWaveStream(stream, chime.WaveFormat);
-                    waveStream.Position = 0;
-                    chime.Position = 0;
-                    providers.Add(waveStream.ToSampleProvider());
-                }
-
-                providers.Add(finalChime.ToSampleProvider());
-                ConcatenatingSampleProvider provida = new ConcatenatingSampleProvider(providers);
-
-                var outputDevice = new WaveOutEvent();
-                outputDevice.Volume = _options.Volume;
-                outputDevice.Init(provida);
-                outputDevice.Play();
-                outputDevice.PlaybackStopped += OnPlaybackStopped;
-
-                chime.Position = 0;
-                chimeIntro.Position = 0;
-                finalChime.Position = 0;
             }
         }
 

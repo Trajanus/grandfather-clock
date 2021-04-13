@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 
-namespace GrandfatherClockTest
+namespace FishmanIndustriesTest
 {
     public class SanityTests
     {

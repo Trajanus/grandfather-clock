@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GrandfatherClock
+namespace FishmanIndustries
 {
     public class GrandfatherClockOptions
     {
