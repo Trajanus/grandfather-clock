@@ -9,10 +9,10 @@ namespace FishmanIndustries
 {
     public class GrandfatherClock
     {
-        private GrandfatherClockOptions _options;
+        public GrandfatherClockOptions Options { get; }
         public GrandfatherClock(GrandfatherClockOptions options)
         {
-            _options = options;
+            Options = options;
         }
 
         public void PlayChime(RawSourceWaveStream chime, RawSourceWaveStream chimeIntro, RawSourceWaveStream finalChime)
@@ -49,7 +49,7 @@ namespace FishmanIndustries
             ConcatenatingSampleProvider provida = new ConcatenatingSampleProvider(providers);
 
             var outputDevice = new WaveOutEvent();
-            outputDevice.Volume = _options.Volume;
+            outputDevice.Volume = Options.Volume;
             outputDevice.Init(provida);
             outputDevice.Play();
             outputDevice.PlaybackStopped += OnPlaybackStopped;

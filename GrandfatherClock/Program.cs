@@ -8,11 +8,11 @@ namespace FishmanIndustries
 {
     class Program
     {
-        public static GrandfatherClockOptions options;
+        public static Options options;
 
         public static void Main(string[] args)
         {
-            GrandfatherClockOptions options = ReadConfiguration();
+            options = ReadConfiguration();
 
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File(options.LogDirectoryPath, rollingInterval: RollingInterval.Day)
@@ -40,15 +40,15 @@ namespace FishmanIndustries
 
         public static ClockService ClockServiceFactory(System.IServiceProvider provider)
         {
-            return new ClockService(options);
+            return new ClockService(options.ClockOptions);
         }
 
-        public static GrandfatherClockOptions ReadConfiguration()
+        public static Options ReadConfiguration()
         {
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("appsettings.json");
             IConfiguration configuration = configurationBuilder.Build();
-            var options = new GrandfatherClockOptions();
+            var options = new Options();
             configuration.Bind(options);
             return options;
         }
