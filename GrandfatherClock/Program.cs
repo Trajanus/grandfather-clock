@@ -40,7 +40,7 @@ namespace FishmanIndustries
 
         public static ClockService ClockServiceFactory(System.IServiceProvider provider)
         {
-            return new ClockService(options.ClockOptions);
+            return new ClockService(options);
         }
 
         public static Options ReadConfiguration()

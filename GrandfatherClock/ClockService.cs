@@ -17,34 +17,31 @@ namespace FishmanIndustries
         private const int MillisecondsInHour = 3600000;
         private const int MillisecondsInFiveMinutes = 300000;
 
-        private readonly GrandfatherClock _clock;
-        private readonly int _millisecondsFactor;
+        private readonly Options _options;
+        private GrandfatherClock _clock;
         private readonly Timer _timer;
 
-        private RawSourceWaveStream _chime;
-        private RawSourceWaveStream _chimeIntro;
-        private RawSourceWaveStream _finalChime;
-
-        public ClockService(GrandfatherClockOptions options)
+        public ClockService(Options options)
         {
-            _millisecondsFactor = options.ChimeInterval;
-            _clock = new GrandfatherClock(options);
-            _timer = new Timer(GetMillisecondsToNextChime(_millisecondsFactor)) { AutoReset = true };
+            _options = options;
+            _timer = new Timer(GetMillisecondsToNextChime(_options.ClockOptions.ChimeInterval)) { AutoReset = true };
             Log.Information($"Next chime will be at {DateTime.Now.AddMilliseconds(_timer.Interval)}");
             _timer.Elapsed += Chime;
         }
 
         public async Task StartAsync(System.Threading.CancellationToken cancellationToken) 
         {
-            if (!Directory.Exists(_clock.Options.ChimesDirectoryPath))
+            if (!Directory.Exists(_options.ChimesDirectoryPath))
             {
-                Log.Warning($"Chime folder {_clock.Options.ChimesDirectoryPath} does not exist, it will be created.");
-                Directory.CreateDirectory(_clock.Options.ChimesDirectoryPath);
+                Log.Warning($"Chime folder {_options.ChimesDirectoryPath} does not exist, it will be created.");
+                Directory.CreateDirectory(_options.ChimesDirectoryPath);
             }
 
-            _chime = await LoadChime($"{_clock.Options.ChimesDirectoryPath}chime.wav");
-            _chimeIntro = await LoadChime($"{_clock.Options.ChimesDirectoryPath}chime-intro.wav");
-            _finalChime = await LoadChime($"{_clock.Options.ChimesDirectoryPath}final-chime.wav");
+            RawSourceWaveStream chimeIntro = await LoadChime($"{_options.ChimesDirectoryPath}chime-intro.wav");
+            RawSourceWaveStream chime = await LoadChime($"{_options.ChimesDirectoryPath}chime.wav");
+            RawSourceWaveStream finalChime = await LoadChime($"{_options.ChimesDirectoryPath}final-chime.wav");
+
+            _clock = new GrandfatherClock(_options.ClockOptions, chimeIntro, chime, finalChime);
 
             _timer.Start(); 
             return; 
@@ -54,6 +51,23 @@ namespace FishmanIndustries
             _timer.Stop(); 
             Log.CloseAndFlush(); 
             return Task.CompletedTask; 
+        }
+
+        private void Chime(object sender, ElapsedEventArgs eventArgs)
+        {
+            try
+            {
+                Timer timer = (Timer)sender;
+                timer.Interval = GetMillisecondsToNextChime(_options.ClockOptions.ChimeInterval);
+                Log.Information($"Next chime will be at {DateTime.Now.AddMilliseconds(timer.Interval)}");
+
+                _clock.PlayChime();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                throw;
+            }
         }
 
         private async Task<RawSourceWaveStream> LoadChime(string chimeFilePath)
@@ -77,37 +91,10 @@ namespace FishmanIndustries
             }
             catch (FileNotFoundException ex)
             {
-                Log.Error($"Failed to find chime file at {_clock.Options.ChimesDirectoryPath}chime.wav", ex);
+                Log.Error($"Failed to find chime file at {_options.ChimesDirectoryPath}chime.wav", ex);
             }
 
             return chime;
-        }
-
-        private void Chime(object sender, ElapsedEventArgs eventArgs)
-        {
-            try
-            {
-                Timer timer = (Timer)sender;
-                timer.Interval = GetMillisecondsToNextChime(_millisecondsFactor);
-                Log.Information($"Next chime will be at {DateTime.Now.AddMilliseconds(timer.Interval)}");
-
-                GrandfatherClock clock = new GrandfatherClock(_clock.Options);
-                clock.PlayChime(_chime, _chimeIntro, _finalChime);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-                throw;
-            }
-        }
-
-        private void OnPlaybackStopped(object sender, EventArgs e)
-        {
-            WaveOutEvent outputDevice = sender as WaveOutEvent;
-            if (null != outputDevice && outputDevice.PlaybackState == PlaybackState.Stopped)
-            {
-                outputDevice.Dispose();
-            }
         }
 
         private int GetMillisecondsToNextChime(int millisecondsFactor)

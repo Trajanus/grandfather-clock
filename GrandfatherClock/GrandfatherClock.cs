@@ -1,22 +1,27 @@
 ﻿using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FishmanIndustries
 {
     public class GrandfatherClock
     {
-        public GrandfatherClockOptions Options { get; }
-        public GrandfatherClock(GrandfatherClockOptions options)
-        {
-            Options = options;
-        }
+        private readonly RawSourceWaveStream _chime;
+        private readonly RawSourceWaveStream _chimeIntro;
+        private readonly RawSourceWaveStream _finalChime;
 
-        public void PlayChime(RawSourceWaveStream chime, RawSourceWaveStream chimeIntro, RawSourceWaveStream finalChime)
+        public GrandfatherClockOptions Options { get; }
+
+        public GrandfatherClock(GrandfatherClockOptions options, RawSourceWaveStream chimeIntro, RawSourceWaveStream chime, RawSourceWaveStream finalChime)
         {
+            if (null == options)
+                throw new ArgumentNullException(nameof(options));
+
             if (null == chimeIntro)
                 throw new ArgumentNullException(nameof(chimeIntro));
 
@@ -26,6 +31,14 @@ namespace FishmanIndustries
             if (null == finalChime)
                 throw new ArgumentNullException(nameof(finalChime));
 
+            Options = options;
+            _chimeIntro = chimeIntro;
+            _chime = chime;
+            _finalChime = finalChime;
+        }
+
+        public void PlayChime()
+        {
             int hour = DateTime.Now.Hour;
             if (hour == 0)
                 hour = 12;
@@ -33,19 +46,19 @@ namespace FishmanIndustries
                 hour = hour - 12;
 
             List<ISampleProvider> providers = new List<ISampleProvider>();
-            providers.Add(chimeIntro.ToSampleProvider());
+            providers.Add(_chimeIntro.ToSampleProvider());
 
             for (int i = 0; i < hour - 1; i++)
             {
                 MemoryStream stream = new MemoryStream();
-                chime.CopyTo(stream);
-                RawSourceWaveStream waveStream = new RawSourceWaveStream(stream, chime.WaveFormat);
+                _chime.CopyTo(stream);
+                RawSourceWaveStream waveStream = new RawSourceWaveStream(stream, _chime.WaveFormat);
                 waveStream.Position = 0;
-                chime.Position = 0;
+                _chime.Position = 0;
                 providers.Add(waveStream.ToSampleProvider());
             }
 
-            providers.Add(finalChime.ToSampleProvider());
+            providers.Add(_finalChime.ToSampleProvider());
             ConcatenatingSampleProvider provida = new ConcatenatingSampleProvider(providers);
 
             var outputDevice = new WaveOutEvent();
@@ -54,9 +67,9 @@ namespace FishmanIndustries
             outputDevice.Play();
             outputDevice.PlaybackStopped += OnPlaybackStopped;
 
-            chime.Position = 0;
-            chimeIntro.Position = 0;
-            finalChime.Position = 0;
+            _chime.Position = 0;
+            _chimeIntro.Position = 0;
+            _finalChime.Position = 0;
         }
 
         private void OnPlaybackStopped(object sender, EventArgs e)
